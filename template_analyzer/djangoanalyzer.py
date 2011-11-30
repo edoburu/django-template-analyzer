@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
-from cms.exceptions import DuplicatePlaceholderWarning
-from cms.models import Page
-from cms.templatetags.cms_tags import Placeholder
-from cms.utils.placeholder import validate_placeholder_name
-from django.contrib.sites.models import Site
-from django.shortcuts import get_object_or_404
-from django.template import (NodeList, TextNode, VariableNode,
-    TemplateSyntaxError)
-from django.template.loader import get_template
-from django.template.loader_tags import (ConstantIncludeNode, ExtendsNode,
-    BlockNode)
-import warnings
 
-def get_page_from_plugin_or_404(cms_plugin):
-    return get_object_or_404(Page, placeholders=cms_plugin.placeholder)
+# Ensure that loader is imported before loader_tags, or a circular import may happen
+# when this file is loaded from an `__init__.py` in an application root.
+# The __init__.py files in applications are loaded very early due to the scan of of translation.activate()
+import django.template.loader
+
+# Normal imports
+from django.template.base import NodeList, VariableNode, TemplateSyntaxError
+from django.template.loader_tags import ConstantIncludeNode, ExtendsNode, BlockNode
+
 
 def _extend_blocks(extend_node, blocks):
     """
@@ -48,7 +43,7 @@ def _find_topmost_template(extend_node):
     # No ExtendsNode
     return extend_node.get_parent({})
 
-def _extend_nodelist(extend_node):
+def _extend_nodelist(node_instances, extend_node):
     """
     Returns a list of placeholders found in the parent template(s) of this
     ExtendsNode
@@ -61,35 +56,35 @@ def _extend_nodelist(extend_node):
     placeholders = []
 
     for block in blocks.values():
-        placeholders += _scan_placeholders(block.nodelist, block, blocks.keys())
+        placeholders += _scan_nodes(node_instances, block.nodelist, block, blocks.keys())
 
     # Scan topmost template for placeholder outside of blocks
     parent_template = _find_topmost_template(extend_node)
-    placeholders += _scan_placeholders(parent_template.nodelist, None, blocks.keys())
+    placeholders += _scan_nodes(node_instances, parent_template.nodelist, None, blocks.keys())
     return placeholders
 
-def _scan_placeholders(nodelist, current_block=None, ignore_blocks=[]):
+def _scan_nodes(node_instances, nodelist, current_block=None, ignore_blocks=[]):
     placeholders = []
 
     for node in nodelist:
-        # check if this is a placeholder first
-        if isinstance(node, Placeholder):
-            placeholders.append(node.get_name())
-        # if it's a Constant Include Node ({% include "template_name.html" %})
+        # first check if this is the object instance to look for.
+        if isinstance(node, node_instances):
+            placeholders.append(node)
+            # if it's a Constant Include Node ({% include "template_name.html" %})
         # scan the child template
         elif isinstance(node, ConstantIncludeNode):
             # if there's an error in the to-be-included template, node.template becomes None
             if node.template:
-                placeholders += _scan_placeholders(node.template.nodelist, current_block)
+                placeholders += _scan_nodes(node_instances, node.template.nodelist, current_block)
         # handle {% extends ... %} tags
         elif isinstance(node, ExtendsNode):
-            placeholders += _extend_nodelist(node)
+            placeholders += _extend_nodelist(node_instances, node)
         # in block nodes we have to scan for super blocks
         elif isinstance(node, VariableNode) and current_block:
             if node.filter_expression.token == 'block.super':
                 if not hasattr(current_block.super, 'nodelist'):
                     raise TemplateSyntaxError("Cannot render block.super for blocks without a parent.")
-                placeholders += _scan_placeholders(current_block.super.nodelist, current_block.super)
+                placeholders += _scan_nodes(node_instances, current_block.super.nodelist, current_block.super)
         # ignore nested blocks which are already handled
         elif isinstance(node, BlockNode) and node.name in ignore_blocks:
             continue
@@ -102,7 +97,7 @@ def _scan_placeholders(nodelist, current_block=None, ignore_blocks=[]):
                     if isinstance(subnodelist, NodeList):
                         if isinstance(node, BlockNode):
                             current_block = node
-                        placeholders += _scan_placeholders(subnodelist, current_block)
+                        placeholders += _scan_nodes(node_instances, subnodelist, current_block)
         # else just scan the node for nodelist instance attributes
         else:
             for attr in dir(node):
@@ -110,32 +105,9 @@ def _scan_placeholders(nodelist, current_block=None, ignore_blocks=[]):
                 if isinstance(obj, NodeList):
                     if isinstance(node, BlockNode):
                         current_block = node
-                    placeholders += _scan_placeholders(obj, current_block)
+                    placeholders += _scan_nodes(node_instances, obj, current_block)
     return placeholders
 
-def get_placeholders(template):
-    compiled_template = get_template(template)
-    placeholders = _scan_placeholders(compiled_template.nodelist)
-    clean_placeholders = []
-    for placeholder in placeholders:
-        if placeholder in clean_placeholders:
-            warnings.warn("Duplicate placeholder found: `%s`" % placeholder, DuplicatePlaceholderWarning)
-        else:
-            validate_placeholder_name(placeholder)
-            clean_placeholders.append(placeholder)
-    return clean_placeholders
 
-SITE_VAR = "site__exact"
-
-def current_site(request):
-    if SITE_VAR in request.REQUEST:
-        return Site.objects.get(pk=request.REQUEST[SITE_VAR])
-    else:
-        site_pk = request.session.get('cms_admin_site', None)
-        if site_pk:
-            try:
-                return Site.objects.get(pk=site_pk)
-            except Site.DoesNotExist:
-                return None
-        else:
-            return Site.objects.get_current()
+def find_node_instances(nodelist, node_instances):
+    return _scan_nodes(node_instances, nodelist)
