@@ -1,0 +1,20 @@
+{% extends "placeholder_tests/base.html" %}
+{% load template_analyzer_test_tags %}
+
+{% comment %}
+
+This file should result in following placeholders:
+
+	- one (from base.html)
+	- extra_one (from this)
+	- two (from base.html)
+	- three (from base.html)
+
+{% endcomment %}
+
+{% block one %}
+	{% if something %}
+		{{ block.super }}
+	{% endif %}
+	{% placeholder "extra_one" %}
+{% endblock %}
