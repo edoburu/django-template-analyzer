@@ -10,7 +10,7 @@ API example
 ::
 
     from template_analyzer.djangoanalyzer import find_node_instances
-    from mypackage.templatetags.placeholdertags import Placeholder
+    from mycms.templatetags.placeholdertags import Placeholder
 
     template = get_template("mycms/default-page.html")
 
