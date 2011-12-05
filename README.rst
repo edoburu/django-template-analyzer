@@ -9,12 +9,12 @@ API example
 
 ::
 
-    from template_analyzer.djangoanalyzer import find_node_instances
+    from template_analyzer.djangoanalyzer import get_node_instances
     from mycms.templatetags.placeholdertags import Placeholder
 
     template = get_template("mycms/default-page.html")
 
-    placeholders = find_node_instances(template, Placeholder)
+    placeholders = get_node_instances(template, Placeholder)
     placeholder_names = [p.get_name() for p in placeholders]
 
 Installation

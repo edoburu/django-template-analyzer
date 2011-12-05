@@ -56,14 +56,14 @@ def _extend_nodelist(node_instances, extend_node):
     placeholders = []
 
     for block in blocks.values():
-        placeholders += _scan_nodes(node_instances, block.nodelist, block, blocks.keys())
+        placeholders += _scan_nodes(node_instances, block.nodelist, block, ignore_blocks=blocks.keys())
 
     # Scan topmost template for placeholder outside of blocks
     parent_template = _find_topmost_template(extend_node)
-    placeholders += _scan_nodes(node_instances, parent_template.nodelist, None, blocks.keys())
+    placeholders += _scan_nodes(node_instances, parent_template.nodelist, ignore_blocks=blocks.keys())
     return placeholders
 
-def _scan_nodes(node_instances, nodelist, current_block=None, ignore_blocks=[]):
+def _scan_nodes(node_instances, nodelist, current_block=None, ignore_blocks=None):
     placeholders = []
 
     for node in nodelist:
@@ -86,7 +86,7 @@ def _scan_nodes(node_instances, nodelist, current_block=None, ignore_blocks=[]):
                     raise TemplateSyntaxError("Cannot render block.super for blocks without a parent.")
                 placeholders += _scan_nodes(node_instances, current_block.super.nodelist, current_block.super)
         # ignore nested blocks which are already handled
-        elif isinstance(node, BlockNode) and node.name in ignore_blocks:
+        elif isinstance(node, BlockNode) and ignore_blocks and node.name in ignore_blocks:
             continue
         # if the node has the newly introduced 'child_nodelists' attribute, scan
         # those attributes for nodelists and recurse them
@@ -109,5 +109,13 @@ def _scan_nodes(node_instances, nodelist, current_block=None, ignore_blocks=[]):
     return placeholders
 
 
-def find_node_instances(nodelist, node_instances):
-    return _scan_nodes(node_instances, nodelist)
+def get_node_instances(nodelist, instances):
+    """
+    Find the nodes of a given instance.
+
+    :param instances: A class Type, or typle of types to find.
+    :param nodelist:  The Template object, or nodelist to scan.
+    :returns: A list of Node objects which inherit from the list of given `instances` to find.
+    :rtype: list
+    """
+    return _scan_nodes(instances, nodelist)

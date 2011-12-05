@@ -3,12 +3,12 @@ from django.test.testcases import TestCase
 
 
 def get_placeholders(filename):
-    from template_analyzer.djangoanalyzer import find_node_instances
+    from template_analyzer.djangoanalyzer import get_node_instances
     from template_analyzer.templatetags.template_analyzer_test_tags import Placeholder
 
     template = get_template(filename)
 
-    placeholders = find_node_instances(template, Placeholder)
+    placeholders = get_node_instances(template, Placeholder)
     return [p.get_name() for p in placeholders]
 
 
