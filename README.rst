@@ -5,7 +5,7 @@ The ``template_analyzer`` package offers an API to analyze the Django template s
 It can be used to find nodes of a particular type, e.g. to do automatic detection of placeholder tags.
 
 API example
-==========
+===========
 
 ::
 
