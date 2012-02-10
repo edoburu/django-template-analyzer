@@ -4,7 +4,10 @@ Introduction
 The ``template_analyzer`` package offers an API to analyze the Django template structure.
 It can be used to find nodes of a particular type, e.g. to do automatic detection of placeholder tags.
 
-The scanner finds tags in various situations which ``template.nodelist.get_nodes_of_type()`` does not find:
+Supported features
+==================
+
+The scanner finds tags in various situations, including:
 
 * Extend nodes
 * Include nodes
@@ -12,7 +15,13 @@ The scanner finds tags in various situations which ``template.nodelist.get_nodes
 * Blocks with or without ``{{ block.super }}``
 * Reorganized blocks
 * Ignoring nodes outside blocks in extending templates
-* Handling multiple levens of super includes
+* Handling multiple levels of super includes
+
+The returned nodes are provided in a natural ordering,
+as they would be expected to appear in the outputted page.
+
+While Django offers a ``template.nodelist.get_nodes_of_type()`` function,
+this function does not produce the same results.
 
 
 API example
