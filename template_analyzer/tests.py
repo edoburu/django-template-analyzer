@@ -8,6 +8,9 @@ def get_placeholders(filename):
 
     template = get_template(filename)
 
+    # Definitely not the same:
+    #placeholders = template.nodelist.get_nodes_by_type(Placeholder)
+
     placeholders = get_node_instances(template, Placeholder)
     return [p.get_name() for p in placeholders]
 
