@@ -48,6 +48,12 @@ Or the current folder can be installed::
 
     pip install .
 
+Changelog
+=========
+
+Version 1.1: added Django 1.4 compatibility.
+Version 1.0: initial release.
+
 Credits
 =======
 
