@@ -56,3 +56,6 @@ class PlaceholderTestCase(TestCase):
         placeholders = get_placeholders('placeholder_tests/nested_super_level1.html')
         self.assertEqual(sorted(placeholders), sorted([u'level1', u'level2', u'level3', u'level4']))
 
+    def test_ignore_variable_extends(self):
+        placeholders = get_placeholders('placeholder_tests/variable_extends.html')
+        self.assertEqual(sorted(placeholders), [])

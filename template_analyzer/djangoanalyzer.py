@@ -9,14 +9,25 @@ import django.template.loader
 from django.template.base import NodeList, VariableNode, TemplateSyntaxError
 from django.template.loader_tags import ConstantIncludeNode, ExtendsNode, BlockNode
 
+def _is_variable_extends(extend_node):
+    if hasattr(extend_node, 'parent_name_expr'):  # Django 1.3
+        return extend_node.parent_name_expr
+    elif hasattr(extend_node, 'parent_name'):
+        # Django 1.4 always has a 'parent_name'. The FilterExpression.var can be either a string, or Variable object.
+        return not isinstance(extend_node.parent_name.var, basestring) # Django 1.4
+    else:
+        raise AttributeError("Unable to detect parent_name of ExtendNode")  # future?
+    return False
+
 
 def _extend_blocks(extend_node, blocks):
     """
     Extends the dictionary `blocks` with *new* blocks in the parent node (recursive)
     """
     # we don't support variable extensions
-    if extend_node.parent_name_expr:
+    if _is_variable_extends(extend_node):
         return
+
     parent = extend_node.get_parent(None)
     # Search for new blocks
     for node in parent.nodelist.get_nodes_by_type(BlockNode):
@@ -49,7 +60,7 @@ def _extend_nodelist(node_instances, extend_node):
     ExtendsNode
     """
     # we don't support variable extensions
-    if extend_node.parent_name_expr:
+    if _is_variable_extends(extend_node):
         return []
     blocks = extend_node.blocks
     _extend_blocks(extend_node, blocks)
