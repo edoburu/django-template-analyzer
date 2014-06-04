@@ -59,3 +59,7 @@ class PlaceholderTestCase(TestCase):
     def test_ignore_variable_extends(self):
         placeholders = get_placeholders('placeholder_tests/variable_extends.html')
         self.assertEqual(sorted(placeholders), [])
+
+    def test_ignore_variable_extends(self):
+        placeholders = get_placeholders('placeholder_tests/variable_extends_default.html')
+        self.assertEqual(sorted(placeholders), sorted([u'one', u'three', u'two']))

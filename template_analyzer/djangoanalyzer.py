@@ -24,11 +24,15 @@ def _extend_blocks(extend_node, blocks):
     """
     Extends the dictionary `blocks` with *new* blocks in the parent node (recursive)
     """
-    # we don't support variable extensions
-    if _is_variable_extends(extend_node):
-        return
+    try:
+        parent = extend_node.get_parent({})
+    except TemplateSyntaxError:
+        if _is_variable_extends(extend_node):
+            # we don't support variable extensions unless they have a default.
+            return
+        else:
+            raise
 
-    parent = extend_node.get_parent(None)
     # Search for new blocks
     for node in parent.nodelist.get_nodes_by_type(BlockNode):
         if not node.name in blocks:
@@ -47,21 +51,26 @@ def _extend_blocks(extend_node, blocks):
         break
 
 def _find_topmost_template(extend_node):
-    parent_template = extend_node.get_parent({})
+    try:
+        parent_template = extend_node.get_parent({})
+    except TemplateSyntaxError:
+        # we don't support variable extensions
+        if _is_variable_extends(extend_node):
+            return
+        else:
+            raise
+
     for node in parent_template.nodelist.get_nodes_by_type(ExtendsNode):
         # Their can only be one extend block in a template, otherwise django raises an exception
         return _find_topmost_template(node)
     # No ExtendsNode
-    return extend_node.get_parent({})
+    return parent_template
 
 def _extend_nodelist(node_instances, extend_node):
     """
     Returns a list of placeholders found in the parent template(s) of this
     ExtendsNode
     """
-    # we don't support variable extensions
-    if _is_variable_extends(extend_node):
-        return []
     blocks = extend_node.blocks
     _extend_blocks(extend_node, blocks)
     placeholders = []
