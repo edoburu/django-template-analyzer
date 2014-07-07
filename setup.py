@@ -4,7 +4,7 @@ from os.path import dirname, join
 
 setup(
     name='django-template-analyzer',
-    version='1.2',
+    version='1.3',
     license='BSD License',
     platforms=['OS Independent'],
 
@@ -28,6 +28,10 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
         'Framework :: Django',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries :: Application Frameworks',

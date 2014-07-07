@@ -6,6 +6,7 @@
 import django.template.loader
 
 # Normal imports
+from django.utils import six
 from django.template.base import NodeList, VariableNode, TemplateSyntaxError
 from django.template.loader_tags import ConstantIncludeNode, ExtendsNode, BlockNode
 
@@ -14,7 +15,7 @@ def _is_variable_extends(extend_node):
         return extend_node.parent_name_expr
     elif hasattr(extend_node, 'parent_name'):
         # Django 1.4 always has a 'parent_name'. The FilterExpression.var can be either a string, or Variable object.
-        return not isinstance(extend_node.parent_name.var, basestring) # Django 1.4
+        return not isinstance(extend_node.parent_name.var, six.string_types) # Django 1.4
     else:
         raise AttributeError("Unable to detect parent_name of ExtendNode")  # future?
     return False
@@ -75,12 +76,12 @@ def _extend_nodelist(node_instances, extend_node):
     _extend_blocks(extend_node, blocks)
     placeholders = []
 
-    for block in blocks.values():
-        placeholders += _scan_nodes(node_instances, block.nodelist, block, ignore_blocks=blocks.keys())
+    for block in list(blocks.values()):
+        placeholders += _scan_nodes(node_instances, block.nodelist, block, ignore_blocks=list(blocks.keys()))
 
     # Scan topmost template for placeholder outside of blocks
     parent_template = _find_topmost_template(extend_node)
-    placeholders += _scan_nodes(node_instances, parent_template.nodelist, ignore_blocks=blocks.keys())
+    placeholders += _scan_nodes(node_instances, parent_template.nodelist, ignore_blocks=list(blocks.keys()))
     return placeholders
 
 def _scan_nodes(node_instances, nodelist, current_block=None, ignore_blocks=None):
