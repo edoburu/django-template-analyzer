@@ -18,7 +18,8 @@ if not settings.configured:
         ),
         INSTALLED_APPS = (
             'template_analyzer',
-        )
+        ),
+        MIDDLEWARE_CLASSES = (),
     )
 
 def runtests():
