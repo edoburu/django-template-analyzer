@@ -48,9 +48,6 @@ Or the current folder can be installed::
 
     pip install .
 
-Changelog
-=========
-
 .. include:: CHANGES.rst
 
 Credits
