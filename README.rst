@@ -29,12 +29,18 @@ API example
 
 ::
 
-    from template_analyzer.djangoanalyzer import get_node_instances
+    from django.template.loader import get_template
     from mycms.templatetags.placeholdertags import Placeholder
+    from template_analyzer.djangoanalyzer import get_node_instances
 
+    # Load a Django template
     template = get_template("mycms/default-page.html")
 
+    # Find all tags in the template:
     placeholders = get_node_instances(template, Placeholder)
+
+    # Read information from the template tag themselves:
+    # (this is an example, accessing a custom method on the Placeholder object)
     placeholder_names = [p.get_name() for p in placeholders]
 
 Installation
