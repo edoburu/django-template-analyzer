@@ -1,3 +1,8 @@
+Version 1.4
+-----------
+
+* Added Django 1.7 support
+
 Version 1.3
 -----------
 
