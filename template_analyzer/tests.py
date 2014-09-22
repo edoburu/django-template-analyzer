@@ -65,4 +65,4 @@ class PlaceholderTestCase(TestCase):
         exp = TemplateSyntaxError('placeholder tag requires 2 arguments')
         with self.assertRaises(TemplateSyntaxError) as tsx:
             get_placeholders('placeholder_tests/tag_exception.html')
-        self.assertEqual(tsx.exception.message, exp.message)
+        self.assertEqual(str(tsx.exception), str(exp))
