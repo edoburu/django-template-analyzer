@@ -8,7 +8,13 @@ import django.template.loader
 # Normal imports
 from django.utils import six
 from django.template.base import NodeList, VariableNode, TemplateSyntaxError
-from django.template.loader_tags import ConstantIncludeNode, ExtendsNode, BlockNode
+from django.template.loader_tags import ExtendsNode, BlockNode
+from django.template.loader import get_template
+
+try:
+    from django.template.loader_tags import ConstantIncludeNode as IncludeNode
+except ImportError:
+    from django.template.loader_tags import IncludeNode
 
 def _is_variable_extends(extend_node):
     if hasattr(extend_node, 'parent_name_expr'):  # Django 1.3
@@ -81,22 +87,30 @@ def _extend_nodelist(node_instances, extend_node):
 
     # Scan topmost template for placeholder outside of blocks
     parent_template = _find_topmost_template(extend_node)
+    if not parent_template:
+        return []
     placeholders += _scan_nodes(node_instances, parent_template.nodelist, ignore_blocks=list(blocks.keys()))
     return placeholders
 
 def _scan_nodes(node_instances, nodelist, current_block=None, ignore_blocks=None):
     placeholders = []
-
     for node in nodelist:
         # first check if this is the object instance to look for.
         if isinstance(node, node_instances):
             placeholders.append(node)
             # if it's a Constant Include Node ({% include "template_name.html" %})
         # scan the child template
-        elif isinstance(node, ConstantIncludeNode):
+        elif isinstance(node, IncludeNode):
+            # This is required for Django 1.7 but works on older version too
+            # Check if it quacks like a template object, if not
+            # presume is a template path and get the object out of it
+            if not callable(getattr(node.template, 'render', None)):
+                template = get_template(node.template.var)
+            else:
+                template = node.template
             # if there's an error in the to-be-included template, node.template becomes None
             if node.template:
-                placeholders += _scan_nodes(node_instances, node.template.nodelist, current_block)
+                placeholders += _scan_nodes(node_instances, template.nodelist, current_block)
         # handle {% extends ... %} tags
         elif isinstance(node, ExtendsNode):
             placeholders += _extend_nodelist(node_instances, node)

@@ -1,3 +1,4 @@
+from django.template.base import TemplateSyntaxError
 from django.template.loader import get_template
 from django.test.testcases import TestCase
 
@@ -60,6 +61,8 @@ class PlaceholderTestCase(TestCase):
         placeholders = get_placeholders('placeholder_tests/variable_extends.html')
         self.assertEqual(sorted(placeholders), [])
 
-    def test_ignore_variable_extends(self):
-        placeholders = get_placeholders('placeholder_tests/variable_extends_default.html')
-        self.assertEqual(sorted(placeholders), sorted([u'one', u'three', u'two']))
+    def test_tag_placeholder_exception(self):
+        exp = TemplateSyntaxError('placeholder tag requires 2 arguments')
+        with self.assertRaises(TemplateSyntaxError) as tsx:
+            get_placeholders('placeholder_tests/tag_exception.html')
+        self.assertEqual(tsx.exception.message, exp.message)
