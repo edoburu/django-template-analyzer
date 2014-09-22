@@ -51,8 +51,7 @@ Or the current folder can be installed::
 Changelog
 =========
 
-Version 1.1: added Django 1.4 compatibility.
-Version 1.0: initial release.
+.. include:: CHANGES.rst
 
 Credits
 =======
