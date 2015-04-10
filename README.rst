@@ -61,4 +61,4 @@ Credits
 
 * This package is based on the work of
   `Django CMS <http://www.django-cms.org>`_. 
-* Many thanks to the contributors of ``cms/utils/plugins.py`` in Django CMS!
+* Many thanks to the contributors of ``cms/utils/placeholder.py`` / ``cms/utils/plugins.py`` in Django CMS!
