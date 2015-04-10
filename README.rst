@@ -1,3 +1,7 @@
+.. image::  https://travis-ci.org/edoburu/django-template-analyzer.png?branch=master
+  :target: http://travis-ci.org/edoburu/django-template-analyzer
+  :alt: build-status
+
 Introduction
 ============
 

@@ -1,0 +1,36 @@
+language: python
+python:
+  - "3.3"
+  - "2.7"
+  - "2.6"
+env:
+  - PACKAGES="django==1.5.8"
+  - PACKAGES="django==1.6.5"
+  - PACKAGES="django==1.7.1"
+  - PACKAGES="django==1.8"
+matrix:
+  exclude:
+  - python: "2.6"
+    env: PACKAGES="django==1.7.1"
+  - python: "2.6"
+    env: PACKAGES="django==1.8"
+install:
+  - pip install -q $PACKAGES
+  - pip install -q -e .
+script:
+  - python runtests.py
+branches:
+  only:
+    - master
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.org#django-fluent"
+    template:
+      - "%{repository}#%{build_number} (%{commit}) %{message}  --  %{build_url}"
+    skip_join: true
+  email:
+    recipients:
+      - travis@edoburu.nl
+    on_success: never
+    on_failure: always
