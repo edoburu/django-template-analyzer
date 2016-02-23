@@ -1,37 +1,45 @@
 language: python
 python:
-  - "3.3"
-  - "2.7"
   - "2.6"
+  - "2.7"
+  - "3.3"
+  - "3.4"
 env:
-  - PACKAGES="django==1.4.5"
-  - PACKAGES="django==1.5.8"
-  - PACKAGES="django==1.6.5"
-  - PACKAGES="django==1.7.1"
-  - PACKAGES="django==1.8.0"
+  - DJANGO="django>=1.4.0,<1.5.0"
+  - DJANGO="django>=1.5.0,<1.6.0"
+  - DJANGO="django>=1.6.0,<1.7.0"
+  - DJANGO="django>=1.7.0,<1.8.0"
+  - DJANGO="django>=1.8.0,<1.9.0"
+  - DJANGO="django>=1.9.0,<1.10.0"
 matrix:
   exclude:
   - python: "2.6"
-    env: PACKAGES="django==1.7.1"
+    env: DJANGO="django>=1.7.0,<1.8.0"
   - python: "2.6"
-    env: PACKAGES="django==1.8.0"
+    env: DJANGO="django>=1.8.0,<1.9.0"
+  - python: "2.6"
+    env: DJANGO="django>=1.9.0,<1.10.0"
   - python: "3.3"
-    env: PACKAGES="django==1.4.5"
+    env: DJANGO="django>=1.4.0,<1.5.0"
+  - python: "3.3"
+    env: DJANGO="django>=1.9.0,<1.10.0"
+
 install:
-  - pip install -q $PACKAGES
-  - pip install -q -e .
+  - travis_retry pip install -q coveralls  # installs coverage
+  - travis_retry pip install $DJANGO
+  - pip install -e .
+
 script:
-  - python runtests.py
+  - coverage run --source=template_analyzer runtests.py
+
+after_success:
+  - coveralls --verbose
+
 branches:
   only:
     - master
+
 notifications:
-  irc:
-    channels:
-      - "irc.freenode.org#django-fluent"
-    template:
-      - "%{repository}#%{build_number} (%{commit}) %{message}  --  %{build_url}"
-    skip_join: true
   email:
     recipients:
       - travis@edoburu.nl
