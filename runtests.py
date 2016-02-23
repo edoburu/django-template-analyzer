@@ -1,9 +1,32 @@
 #!/usr/bin/env python
 import sys
+import django
 from django.conf import settings
 from django.core.management import execute_from_command_line
 
 if not settings.configured:
+    if django.VERSION >= (1, 8):
+        template_settings = dict(
+            TEMPLATES = [
+                {
+                    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                    'DIRS': (),
+                    'OPTIONS': {
+                        'loaders': (
+                            'django.template.loaders.filesystem.Loader',
+                            'django.template.loaders.app_directories.Loader',
+                        ),
+                    },
+                },
+            ]
+        )
+    else:
+        template_settings = dict(
+            TEMPLATE_LOADERS = (
+                'django.template.loaders.app_directories.Loader',
+            )
+        )
+
     settings.configure(
         DEBUG = True,
         TEMPLATE_DEBUG = True,
@@ -13,13 +36,11 @@ if not settings.configured:
                 'NAME': ':memory:'
             }
         },
-        TEMPLATE_LOADERS = (
-            'django.template.loaders.app_directories.Loader',
-        ),
         INSTALLED_APPS = (
             'template_analyzer',
         ),
         MIDDLEWARE_CLASSES = (),
+        **template_settings
     )
 
 def runtests():

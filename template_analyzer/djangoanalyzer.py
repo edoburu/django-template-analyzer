@@ -3,14 +3,14 @@
 # Ensure that loader is imported before loader_tags, or a circular import may happen
 # when this file is loaded from an `__init__.py` in an application root.
 # The __init__.py files in applications are loaded very early due to the scan of of translation.activate()
-from django.template import Context
-import django.template.loader
+import django.template.loader  # noqa
 
 # Normal imports
 from django.utils import six
-from django.template.base import NodeList, VariableNode, TemplateSyntaxError, Template
-from django.template.loader_tags import ExtendsNode, BlockNode
+from django.template import NodeList, TemplateSyntaxError, Context, Template
+from django.template.base import VariableNode
 from django.template.loader import get_template
+from django.template.loader_tags import ExtendsNode, BlockNode
 
 try:
     from django.template.backends.django import Template as TemplateAdapter
@@ -38,7 +38,9 @@ def _extend_blocks(extend_node, blocks, context):
     Extends the dictionary `blocks` with *new* blocks in the parent node (recursive)
     """
     try:
-        parent = extend_node.get_parent(context)
+        # This needs a fresh parent context, or it will detection recursion in Django 1.9+,
+        # and thus skip the base template, which is already loaded.
+        parent = extend_node.get_parent(_get_context())
     except TemplateSyntaxError:
         if _is_variable_extends(extend_node):
             # we don't support variable extensions unless they have a default.
@@ -159,6 +161,19 @@ def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_bl
     return placeholders
 
 
+def _get_context(nodelist=None):
+    if TemplateAdapter is not None:
+        # The context is empty, but needs to be provided to handle the {% extends %} node.
+        # For Django 1.8 templates, provide a hook to the top level template there.
+        context = Context({})
+        context.template = Template('')
+        if isinstance(nodelist, TemplateAdapter):
+            context.template = nodelist.template
+        return context
+    else:
+        return {}
+
+
 def get_node_instances(nodelist, instances):
     """
     Find the nodes of a given instance.
@@ -168,10 +183,5 @@ def get_node_instances(nodelist, instances):
     :returns: A list of Node objects which inherit from the list of given `instances` to find.
     :rtype: list
     """
-    # The context is empty, but needs to be provided to handle the {% extends %} node.
-    # For Django 1.8 templates, provide a hook to the top level template there.
-    context = Context({})
-    if TemplateAdapter is not None and isinstance(nodelist, TemplateAdapter):
-        context.template = nodelist.template
-
+    context = _get_context(nodelist)
     return _scan_nodes(instances, nodelist, context)
