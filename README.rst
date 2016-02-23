@@ -1,9 +1,16 @@
-.. image::  https://travis-ci.org/edoburu/django-template-analyzer.png?branch=master
-  :target: http://travis-ci.org/edoburu/django-template-analyzer
-  :alt: build-status
+django-template-analyzer
+========================
 
-Introduction
-============
+.. image:: https://travis-ci.org/edoburu/django-template-analyzer.svg?branch=master
+    :target: http://travis-ci.org/edoburu/django-template-analyzer
+.. image:: https://img.shields.io/pypi/v/django-template-analyzer.svg
+    :target: https://pypi.python.org/pypi/django-template-analyzer/
+.. image:: https://img.shields.io/pypi/dm/django-template-analyzer.svg
+    :target: https://pypi.python.org/pypi/django-template-analyzer/
+.. image:: https://img.shields.io/badge/wheel-yes-green.svg
+    :target: https://pypi.python.org/pypi/django-template-analyzer/
+.. image:: https://img.shields.io/pypi/l/django-template-analyzer.svg
+    :target: https://pypi.python.org/pypi/django-template-analyzer/
 
 The ``template_analyzer`` package offers an API to analyze the Django template structure.
 It can be used to find nodes of a particular type, e.g. to do automatic detection of placeholder tags.
@@ -31,7 +38,7 @@ this function does not produce the same results.
 API example
 ===========
 
-::
+.. code-block:: python
 
     from django.template.loader import get_template
     from mycms.templatetags.placeholdertags import Placeholder
