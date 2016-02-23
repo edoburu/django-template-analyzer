@@ -17,6 +17,7 @@ def get_placeholders(filename):
 
 
 class PlaceholderTestCase(TestCase):
+
     def test_placeholder_scanning_extend(self):
         placeholders = get_placeholders('placeholder_tests/test_one.html')
         self.assertEqual(sorted(placeholders), sorted([u'new_one', u'two', u'three']))

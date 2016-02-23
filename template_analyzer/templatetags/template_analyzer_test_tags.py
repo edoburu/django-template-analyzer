@@ -2,6 +2,7 @@ from django.template import Library, Node, Variable, TemplateSyntaxError
 
 register = Library()
 
+
 class Placeholder(Node):
     """
     Simple placeholder node.

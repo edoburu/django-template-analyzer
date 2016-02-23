@@ -13,24 +13,25 @@ from django.template.loader import get_template
 from django.template.loader_tags import ExtendsNode, BlockNode
 
 try:
+    # Django 1.8+
     from django.template.backends.django import Template as TemplateAdapter
 except ImportError:
     TemplateAdapter = None
 
 try:
-    from django.template.loader_tags import ConstantIncludeNode as IncludeNode
+    from django.template.loader_tags import ConstantIncludeNode as IncludeNode  # Django <= 1.6
 except ImportError:
     from django.template.loader_tags import IncludeNode
+
 
 def _is_variable_extends(extend_node):
     if hasattr(extend_node, 'parent_name_expr'):  # Django 1.3
         return extend_node.parent_name_expr
     elif hasattr(extend_node, 'parent_name'):
         # Django 1.4 always has a 'parent_name'. The FilterExpression.var can be either a string, or Variable object.
-        return not isinstance(extend_node.parent_name.var, six.string_types) # Django 1.4
+        return not isinstance(extend_node.parent_name.var, six.string_types)  # Django 1.4
     else:
         raise AttributeError("Unable to detect parent_name of ExtendNode")  # future?
-    return False
 
 
 def _extend_blocks(extend_node, blocks, context):
@@ -60,10 +61,12 @@ def _extend_blocks(extend_node, blocks, context):
                 seen_supers.append(block.super)
                 block = block.super
             block.super = node
+
     # search for further ExtendsNodes
     for node in parent.nodelist.get_nodes_by_type(ExtendsNode):
         _extend_blocks(node, blocks, context)
         break
+
 
 def _find_topmost_template(extend_node, context):
     try:
@@ -78,8 +81,10 @@ def _find_topmost_template(extend_node, context):
     for node in parent_template.nodelist.get_nodes_by_type(ExtendsNode):
         # Their can only be one extend block in a template, otherwise django raises an exception
         return _find_topmost_template(node, context)
+
     # No ExtendsNode
     return parent_template
+
 
 def _extend_nodelist(node_instances, extend_node, context):
     """
@@ -99,6 +104,7 @@ def _extend_nodelist(node_instances, extend_node, context):
         return []
     placeholders += _scan_nodes(node_instances, parent_template.nodelist, context, ignore_blocks=list(blocks.keys()))
     return placeholders
+
 
 def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_blocks=None):
     # The Django 1.8 loader returns an adapter class; it wraps the original Template in a new object to be API compatible
