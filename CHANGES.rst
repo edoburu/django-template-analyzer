@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.6
+-----------
+
+* Added Django 1.9 support
+
 Version 1.5
 -----------
 
