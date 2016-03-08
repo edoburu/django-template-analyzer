@@ -9,8 +9,8 @@ django-template-analyzer
     :target: https://pypi.python.org/pypi/django-template-analyzer/
 .. image:: https://img.shields.io/badge/wheel-yes-green.svg
     :target: https://pypi.python.org/pypi/django-template-analyzer/
-.. image:: https://img.shields.io/pypi/l/django-template-analyzer.svg
-    :target: https://pypi.python.org/pypi/django-template-analyzer/
+.. image:: https://img.shields.io/codecov/c/github/edoburu/django-template-analyzer/master.svg
+    :target: https://codecov.io/github/edoburu/django-template-analyzer?branch=master
 
 The ``template_analyzer`` package offers an API to analyze the Django template structure.
 It can be used to find nodes of a particular type, e.g. to do automatic detection of placeholder tags.
