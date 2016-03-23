@@ -41,7 +41,7 @@ def _extend_blocks(extend_node, blocks, context):
     try:
         # This needs a fresh parent context, or it will detection recursion in Django 1.9+,
         # and thus skip the base template, which is already loaded.
-        parent = extend_node.get_parent(_get_context())
+        parent = extend_node.get_parent(_get_context(None, context))
     except TemplateSyntaxError:
         if _is_variable_extends(extend_node):
             # we don't support variable extensions unless they have a default.
@@ -167,12 +167,21 @@ def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_bl
     return placeholders
 
 
-def _get_context(nodelist=None):
+def _get_context(nodelist, parent_context=None):
     if TemplateAdapter is not None:
+        # Django 1.8+
         # The context is empty, but needs to be provided to handle the {% extends %} node.
-        # For Django 1.8 templates, provide a hook to the top level template there.
+        # A fresh template instance is constructed, so the loader cache of the
+        # provided external `nodelist` is skipped.
+        if nodelist is not None:
+            engine = nodelist.template.engine
+        elif parent_context is not None:
+            engine = parent_context.template.engine
+        else:
+            engine = None
+
         context = Context({})
-        context.template = Template('')
+        context.template = Template('', engine=engine)
         if isinstance(nodelist, TemplateAdapter):
             context.template = nodelist.template
         return context

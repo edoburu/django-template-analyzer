@@ -15,6 +15,7 @@ if not settings.configured:
                         'loaders': (
                             'django.template.loaders.filesystem.Loader',
                             'django.template.loaders.app_directories.Loader',
+                            #added dynamically: 'template_analyzer.tests.app_loader.Loader',
                         ),
                     },
                 },
@@ -24,6 +25,7 @@ if not settings.configured:
         template_settings = dict(
             TEMPLATE_LOADERS = (
                 'django.template.loaders.app_directories.Loader',
+                'template_analyzer.tests.app_loader.Loader',
             )
         )
 

@@ -1,0 +1,5 @@
+{% extends 'template_analyzer:placeholder_tests/base.html' %}{% load template_analyzer_test_tags %}
+
+{% block one %}{% placeholder "new_one" %}{% endblock %}
+
+{% placeholder "outside_block" %}
