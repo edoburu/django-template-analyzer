@@ -3,6 +3,7 @@
 # Ensure that loader is imported before loader_tags, or a circular import may happen
 # when this file is loaded from an `__init__.py` in an application root.
 # The __init__.py files in applications are loaded very early due to the scan of of translation.activate()
+import django
 import django.template.loader  # noqa
 
 # Normal imports
@@ -25,23 +26,31 @@ except ImportError:
 
 
 def _is_variable_extends(extend_node):
-    if hasattr(extend_node, 'parent_name_expr'):  # Django 1.3
-        return extend_node.parent_name_expr
-    elif hasattr(extend_node, 'parent_name'):
-        # Django 1.4 always has a 'parent_name'. The FilterExpression.var can be either a string, or Variable object.
-        return not isinstance(extend_node.parent_name.var, six.string_types)  # Django 1.4
+    """
+    Check whether an ``{% extends variable %}`` is used in the template.
+
+    :type extend_node: ExtendsNode
+    """
+    if django.VERSION < (1, 4):
+        return extend_node.parent_name_expr  # Django 1.3
     else:
-        raise AttributeError("Unable to detect parent_name of ExtendNode")  # future?
+        # The FilterExpression.var can be either a string, or Variable object.
+        return not isinstance(extend_node.parent_name.var, six.string_types)  # Django 1.4
 
 
 def _extend_blocks(extend_node, blocks, context):
     """
     Extends the dictionary `blocks` with *new* blocks in the parent node (recursive)
+
+    :param extend_node: The ``{% extends .. %}`` node object.
+    :type extend_node: ExtendsNode
+    :param blocks: dict of all block names found in the template.
+    :type blocks: dict
     """
     try:
         # This needs a fresh parent context, or it will detection recursion in Django 1.9+,
         # and thus skip the base template, which is already loaded.
-        parent = extend_node.get_parent(_get_context(None, context))
+        parent = extend_node.get_parent(_get_extend_context(context))
     except TemplateSyntaxError:
         if _is_variable_extends(extend_node):
             # we don't support variable extensions unless they have a default.
@@ -50,22 +59,23 @@ def _extend_blocks(extend_node, blocks, context):
             raise
 
     # Search for new blocks
-    for node in parent.nodelist.get_nodes_by_type(BlockNode):
-        if not node.name in blocks:
-            blocks[node.name] = node
+    for parent_block in parent.nodelist.get_nodes_by_type(BlockNode):
+        if not parent_block.name in blocks:
+            blocks[parent_block.name] = parent_block
         else:
             # set this node as the super node (for {{ block.super }})
-            block = blocks[node.name]
+            block = blocks[parent_block.name]
             seen_supers = []
-            while hasattr(block.super, 'nodelist') and block.super not in seen_supers:
-                seen_supers.append(block.super)
-                block = block.super
-            block.super = node
+            while hasattr(block.parent, 'nodelist') and block.parent not in seen_supers:
+                seen_supers.append(block.parent)
+                block = block.parent
+            block.parent = parent_block
 
-    # search for further ExtendsNodes
-    for node in parent.nodelist.get_nodes_by_type(ExtendsNode):
-        _extend_blocks(node, blocks, context)
-        break
+    # search for further ExtendsNodes in the extended template
+    # There is only one extend block in a template (Django checks for this).
+    parent_extends = parent.nodelist.get_nodes_by_type(ExtendsNode)
+    if parent_extends:
+        _extend_blocks(parent_extends[0], blocks, context)
 
 
 def _find_topmost_template(extend_node, context):
@@ -78,44 +88,50 @@ def _find_topmost_template(extend_node, context):
         else:
             raise
 
-    for node in parent_template.nodelist.get_nodes_by_type(ExtendsNode):
-        # Their can only be one extend block in a template, otherwise django raises an exception
-        return _find_topmost_template(node, context)
+    # There is only one extend block in a template (Django checks for this).
+    parent_extends = parent_template.nodelist.get_nodes_by_type(ExtendsNode)
+    if parent_extends:
+        return _find_topmost_template(parent_extends[0], context)
+    else:
+        # No ExtendsNode
+        return parent_template
 
-    # No ExtendsNode
-    return parent_template
 
-
-def _extend_nodelist(node_instances, extend_node, context):
+def _extend_nodelist(extends_node, context, instance_types):
     """
-    Returns a list of placeholders found in the parent template(s) of this
-    ExtendsNode
+    Returns a list of results found in the parent template(s)
+    :type extends_node: ExtendsNode
     """
-    blocks = extend_node.blocks
-    _extend_blocks(extend_node, blocks, context)
-    placeholders = []
+    results = []
+    blocks = extends_node.blocks  # dict with all blocks in the current template
+    _extend_blocks(extends_node, blocks, context)
 
+    # Dive into all blocks of the page
     for block in list(blocks.values()):
-        placeholders += _scan_nodes(node_instances, block.nodelist, context, block, ignore_blocks=list(blocks.keys()))
+        results += _scan_nodes(block.nodelist, context, instance_types, block, ignore_blocks=list(blocks.keys()))
 
     # Scan topmost template for placeholder outside of blocks
-    parent_template = _find_topmost_template(extend_node, context)
+    parent_template = _find_topmost_template(extends_node, context)
     if not parent_template:
         return []
-    placeholders += _scan_nodes(node_instances, parent_template.nodelist, context, ignore_blocks=list(blocks.keys()))
-    return placeholders
+    else:
+        results += _scan_nodes(parent_template.nodelist, context, instance_types, ignore_blocks=list(blocks.keys()))
+        return results
 
 
-def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_blocks=None):
-    # The Django 1.8 loader returns an adapter class; it wraps the original Template in a new object to be API compatible
-    if TemplateAdapter is not None and isinstance(nodelist, TemplateAdapter):
-        nodelist = nodelist.template
+def _scan_nodes(nodelist, context, instance_types, current_block=None, ignore_blocks=None):
+    """
+    Loop through all nodes of a single scope level.
 
-    placeholders = []
+    :type nodelist: django.template.base.NodeList
+    :type current_block: BlockNode
+    :param instance_types: The instance to look for
+    """
+    results = []
     for node in nodelist:
         # first check if this is the object instance to look for.
-        if isinstance(node, node_instances):
-            placeholders.append(node)
+        if isinstance(node, instance_types):
+            results.append(node)
             # if it's a Constant Include Node ({% include "template_name.html" %})
         # scan the child template
         elif isinstance(node, IncludeNode):
@@ -133,21 +149,21 @@ def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_bl
                     # Django 1.8: received a new object, take original template
                     template = template.template
 
-                placeholders += _scan_nodes(node_instances, template.nodelist, context, current_block)
+                results += _scan_nodes(template.nodelist, context, instance_types, current_block)
         # handle {% extends ... %} tags
         elif isinstance(node, ExtendsNode):
-            placeholders += _extend_nodelist(node_instances, node, context)
+            results += _extend_nodelist(node, context, instance_types)
         # in block nodes we have to scan for super blocks
         elif isinstance(node, VariableNode) and current_block:
             if node.filter_expression.token == 'block.super':
                 # Found a {{ block.super }} line
-                if not hasattr(current_block.super, 'nodelist'):
+                if not hasattr(current_block.parent, 'nodelist'):
                     raise TemplateSyntaxError(
                         "Cannot read {{{{ block.super }}}} for {{% block {0} %}}, "
                         "the parent template doesn't have this block.".format(
                         current_block.name
                     ))
-                placeholders += _scan_nodes(node_instances, current_block.super.nodelist, context, current_block.super)
+                results += _scan_nodes(current_block.parent.nodelist, context, instance_types, current_block.parent)
         # ignore nested blocks which are already handled
         elif isinstance(node, BlockNode) and ignore_blocks and node.name in ignore_blocks:
             continue
@@ -160,7 +176,7 @@ def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_bl
                     if isinstance(subnodelist, NodeList):
                         if isinstance(node, BlockNode):
                             current_block = node
-                        placeholders += _scan_nodes(node_instances, subnodelist, context, current_block)
+                        results += _scan_nodes(subnodelist, context, instance_types, current_block)
         # else just scan the node for nodelist instance attributes
         else:
             for attr in dir(node):
@@ -168,27 +184,35 @@ def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_bl
                 if isinstance(obj, NodeList):
                     if isinstance(node, BlockNode):
                         current_block = node
-                    placeholders += _scan_nodes(node_instances, obj, context, current_block)
-    return placeholders
+                    results += _scan_nodes(obj, context, instance_types, current_block)
+    return results
 
 
-def _get_context(nodelist, parent_context=None):
+def _get_main_context(nodelist):
     if TemplateAdapter is not None:
         # Django 1.8+
         # The context is empty, but needs to be provided to handle the {% extends %} node.
-        # A fresh template instance is constructed, so the loader cache of the
-        # provided external `nodelist` is skipped.
-        if nodelist is not None:
-            engine = nodelist.template.engine
-        elif parent_context is not None:
-            engine = parent_context.template.engine
-        else:
-            engine = None
-
         context = Context({})
-        context.template = Template('', engine=engine)
+
         if isinstance(nodelist, TemplateAdapter):
+            # The top-level context.
             context.template = nodelist.template
+        else:
+            # Just in case a different nodelist is provided.
+            # Using the default template now.
+            context.template = Template('')
+        return context
+    else:
+        return {}
+
+
+def _get_extend_context(parent_context):
+    if TemplateAdapter is not None:
+        # Django 1.8+
+        # For extends nodes, a fresh template instance is constructed.
+        # The loader cache of the original `nodelist` is skipped.
+        context = Context({})
+        context.template = Template('', engine=parent_context.template.engine)
         return context
     else:
         return {}
@@ -198,10 +222,19 @@ def get_node_instances(nodelist, instances):
     """
     Find the nodes of a given instance.
 
+    In contract to the standard ``template.nodelist.get_nodes_by_type()`` method,
+    this also looks into ``{% extends %}`` and ``{% include .. %}`` nodes
+    to find all possible nodes of the given type.
+
     :param instances: A class Type, or tuple of types to find.
     :param nodelist:  The Template object, or nodelist to scan.
     :returns: A list of Node objects which inherit from the list of given `instances` to find.
     :rtype: list
     """
-    context = _get_context(nodelist)
-    return _scan_nodes(instances, nodelist, context)
+    context = _get_main_context(nodelist)
+
+    # The Django 1.8 loader returns an adapter class; it wraps the original Template in a new object to be API compatible
+    if TemplateAdapter is not None and isinstance(nodelist, TemplateAdapter):
+        nodelist = nodelist.template
+
+    return _scan_nodes(nodelist, context, instances)
