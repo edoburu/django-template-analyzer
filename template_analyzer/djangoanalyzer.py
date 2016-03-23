@@ -103,7 +103,9 @@ def _extend_nodelist(extends_node, context, instance_types):
     :type extends_node: ExtendsNode
     """
     results = []
-    blocks = extends_node.blocks  # dict with all blocks in the current template
+
+    # Find all blocks in the complete inheritance chain
+    blocks = extends_node.blocks.copy()  # dict with all blocks in the current template
     _extend_blocks(extends_node, blocks, context)
 
     # Dive into all blocks of the page

@@ -1,0 +1,4 @@
+{% extends "placeholder_tests/cache_base.html" %}
+{% load template_analyzer_test_tags %}
+
+{% block cache %}{{ block.super }}{% placeholder "cache" %}{% endblock %}

@@ -1,4 +1,5 @@
 import django
+from django.template import Context
 from django.template.base import TemplateSyntaxError
 from django.template.loader import get_template
 from django.test.testcases import TestCase
@@ -72,19 +73,19 @@ class PlaceholderTestCase(TestCase):
             get_placeholders('placeholder_tests/tag_exception.html')
         self.assertEqual(str(tsx.exception), str(exp))
 
-    def _get_custom_engine(self):
+    def _get_custom_engine(self, **options):
+        options.setdefault('loaders', (
+            'django.template.loaders.filesystem.Loader',
+            'django.template.loaders.app_directories.Loader',
+            'template_analyzer.tests.app_loader.Loader',
+        ))
+
         from django.template.backends.django import DjangoTemplates
         return DjangoTemplates({
             'NAME': 'loader_test',
             'DIRS': (),
             'APP_DIRS': False,
-            'OPTIONS': {
-                'loaders': (
-                    'django.template.loaders.filesystem.Loader',
-                    'django.template.loaders.app_directories.Loader',
-                    'template_analyzer.tests.app_loader.Loader',
-                ),
-            }
+            'OPTIONS': options,
         })
 
     def test_custom_loader(self):
@@ -96,10 +97,10 @@ class PlaceholderTestCase(TestCase):
             # otherwise the custom extends loader could fail.
             engine = self._get_custom_engine()
             template = engine.get_template('placeholder_tests/extends_custom_loader_level1.html')
-            placeholders = get_placeholders_in_template(template)
         else:
-            placeholders = get_placeholders('placeholder_tests/extends_custom_loader_level1.html')
+            template = get_template('placeholder_tests/extends_custom_loader_level1.html')
 
+        placeholders = get_placeholders_in_template(template)
         self.assertEqual(sorted(placeholders), sorted([u'new_one', u'two', u'three']))
 
     def test_custom_loader_level2(self):
@@ -111,7 +112,21 @@ class PlaceholderTestCase(TestCase):
             # otherwise the custom extends loader could fail.
             engine = self._get_custom_engine()
             template = engine.get_template('placeholder_tests/extends_custom_loader_level2.html')
-            placeholders = get_placeholders_in_template(template)
         else:
-            placeholders = get_placeholders('placeholder_tests/extends_custom_loader_level2.html')
+            template = get_template('placeholder_tests/extends_custom_loader_level2.html')
+
+        placeholders = get_placeholders_in_template(template)
         self.assertEqual(sorted(placeholders), sorted([u'new_one', u'two', u'three']))
+
+    def test_cached_template(self):
+        context = Context()
+        template = get_template('placeholder_tests/cache_level2.html')
+        result1 = template.render(context)  # render first
+
+        # the analyzer should not affect block nodes.
+        placeholders = get_placeholders_in_template(template)
+        self.assertEqual(sorted(placeholders), sorted([u'cache']))
+
+        # see if the block structure is altered
+        result2 = template.render(context)
+        self.assertEqual(result1, result2)
