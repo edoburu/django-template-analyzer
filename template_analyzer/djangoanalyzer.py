@@ -196,7 +196,7 @@ def _get_main_context(nodelist):
 
         if isinstance(nodelist, TemplateAdapter):
             # The top-level context.
-            context.template = nodelist.template
+            context.template = Template('', engine=nodelist.template.engine)
         else:
             # Just in case a different nodelist is provided.
             # Using the default template now.
