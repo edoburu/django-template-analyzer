@@ -62,6 +62,10 @@ class PlaceholderTestCase(TestCase):
         placeholders = get_placeholders('placeholder_tests/variable_extends.html')
         self.assertEqual(sorted(placeholders), [])
 
+    def test_variable_extends_default(self):
+        placeholders = get_placeholders('placeholder_tests/variable_extends_default.html')
+        self.assertEqual(sorted(placeholders), sorted([u'one', u'two', u'three']))
+
     def test_tag_placeholder_exception(self):
         exp = TemplateSyntaxError('placeholder tag requires 2 arguments')
         with self.assertRaises(TemplateSyntaxError) as tsx:
