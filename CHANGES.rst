@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 1.6.1
+-------------
+
+* Fixed breaking templates when using the cached template loader; content was shown multiple times.
+* fixed support for parsing nodes from a custom template engine.
+* Improve error messages for invalid template block names.
+
 Version 1.6
 -----------
 
