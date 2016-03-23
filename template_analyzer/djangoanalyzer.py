@@ -140,8 +140,13 @@ def _scan_nodes(node_instances, nodelist, context, current_block=None, ignore_bl
         # in block nodes we have to scan for super blocks
         elif isinstance(node, VariableNode) and current_block:
             if node.filter_expression.token == 'block.super':
+                # Found a {{ block.super }} line
                 if not hasattr(current_block.super, 'nodelist'):
-                    raise TemplateSyntaxError("Cannot render block.super for blocks without a parent.")
+                    raise TemplateSyntaxError(
+                        "Cannot read {{{{ block.super }}}} for {{% block {0} %}}, "
+                        "the parent template doesn't have this block.".format(
+                        current_block.name
+                    ))
                 placeholders += _scan_nodes(node_instances, current_block.super.nodelist, context, current_block.super)
         # ignore nested blocks which are already handled
         elif isinstance(node, BlockNode) and ignore_blocks and node.name in ignore_blocks:
