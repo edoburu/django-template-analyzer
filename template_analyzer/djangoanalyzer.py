@@ -108,16 +108,17 @@ def _extend_nodelist(extends_node, context, instance_types):
     blocks = extends_node.blocks.copy()  # dict with all blocks in the current template
     _extend_blocks(extends_node, blocks, context)
 
-    # Dive into all blocks of the page
+    # Dive into all blocks of the page one by one
+    all_block_names = list(blocks.keys())
     for block in list(blocks.values()):
-        results += _scan_nodes(block.nodelist, context, instance_types, block, ignore_blocks=list(blocks.keys()))
+        results += _scan_nodes(block.nodelist, context, instance_types, block, ignore_blocks=all_block_names)
 
-    # Scan topmost template for placeholder outside of blocks
+    # Scan topmost template for nodes that exist outside of blocks
     parent_template = _find_topmost_template(extends_node, context)
     if not parent_template:
         return []
     else:
-        results += _scan_nodes(parent_template.nodelist, context, instance_types, ignore_blocks=list(blocks.keys()))
+        results += _scan_nodes(parent_template.nodelist, context, instance_types, ignore_blocks=all_block_names)
         return results
 
 
