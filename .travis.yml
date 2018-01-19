@@ -29,8 +29,7 @@ matrix:
 before_install:
 - pip install codecov
 install:
-- travis_retry pip install $DJANGO
-- pip install -e .
+- travis_retry pip install $DJANGO -e .
 script:
 - coverage run --source=template_analyzer runtests.py
 after_success:
