@@ -5,8 +5,6 @@ django-template-analyzer
     :target: http://travis-ci.org/edoburu/django-template-analyzer
 .. image:: https://img.shields.io/pypi/v/django-template-analyzer.svg
     :target: https://pypi.python.org/pypi/django-template-analyzer/
-.. image:: https://img.shields.io/pypi/dm/django-template-analyzer.svg
-    :target: https://pypi.python.org/pypi/django-template-analyzer/
 .. image:: https://img.shields.io/badge/wheel-yes-green.svg
     :target: https://pypi.python.org/pypi/django-template-analyzer/
 .. image:: https://img.shields.io/codecov/c/github/edoburu/django-template-analyzer/master.svg
