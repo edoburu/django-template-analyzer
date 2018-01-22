@@ -23,6 +23,7 @@ if not settings.configured:
         )
     else:
         template_settings = dict(
+            TEMPLATE_DEBUG = True,
             TEMPLATE_LOADERS = (
                 'django.template.loaders.app_directories.Loader',
                 'template_analyzer.tests.app_loader.Loader',
@@ -31,7 +32,6 @@ if not settings.configured:
 
     settings.configure(
         DEBUG = True,
-        TEMPLATE_DEBUG = True,
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',

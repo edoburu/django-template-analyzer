@@ -119,7 +119,7 @@ class PlaceholderTestCase(TestCase):
         self.assertEqual(sorted(placeholders), sorted([u'new_one', u'two', u'three']))
 
     def test_cached_template(self):
-        context = Context()
+        context = {}
         template = get_template('placeholder_tests/cache_level2.html')
         result1 = template.render(context)  # render first
 
