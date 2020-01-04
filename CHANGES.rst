@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.6.2 (2020-01-04)
+--------------------------
+
+* Fixed Django 3.0 compatibility by removing ``django.utils.six`` dependency.
+
 Version 1.6.1
 -------------
 
