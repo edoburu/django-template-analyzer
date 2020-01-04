@@ -63,8 +63,6 @@ Or the current folder can be installed::
 
     pip install .
 
-.. include:: CHANGES.rst
-
 Credits
 =======
 
