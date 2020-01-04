@@ -7,11 +7,16 @@ import django
 import django.template.loader  # noqa
 
 # Normal imports
-from django.utils import six
+import sys
 from django.template import NodeList, TemplateSyntaxError, Context, Template
 from django.template.base import VariableNode
 from django.template.loader import get_template
 from django.template.loader_tags import ExtendsNode, BlockNode
+
+if sys.version_info[0] >= 3:
+    string_types = str,
+else:
+    string_types = basestring,
 
 try:
     # Django 1.8+
@@ -35,7 +40,7 @@ def _is_variable_extends(extend_node):
         return extend_node.parent_name_expr  # Django 1.3
     else:
         # The FilterExpression.var can be either a string, or Variable object.
-        return not isinstance(extend_node.parent_name.var, six.string_types)  # Django 1.4
+        return not isinstance(extend_node.parent_name.var, string_types)  # Django 1.4
 
 
 def _extend_blocks(extend_node, blocks, context):
