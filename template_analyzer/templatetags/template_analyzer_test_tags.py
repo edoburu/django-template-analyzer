@@ -1,4 +1,4 @@
-from django.template import Library, Node, Variable, TemplateSyntaxError
+from django.template import Library, Node, TemplateSyntaxError, Variable
 
 register = Library()
 
@@ -23,7 +23,7 @@ class Placeholder(Node):
         return self.name_var.literal
 
     def render(self, context):
-        return '[placeholder: {0}]'.format(self.name_var.literal)
+        return "[placeholder: {0}]".format(self.name_var.literal)
 
 
 @register.tag

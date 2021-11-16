@@ -7,11 +7,11 @@ import django
 import django.template.loader  # noqa
 
 # Normal imports
-from django.template import NodeList, TemplateSyntaxError, Context, Template
-from django.template.base import VariableNode
+from django.template import Context, NodeList, Template, TemplateSyntaxError
 from django.template.backends.django import Template as TemplateAdapter
+from django.template.base import VariableNode
 from django.template.loader import get_template
-from django.template.loader_tags import ExtendsNode, BlockNode, IncludeNode
+from django.template.loader_tags import BlockNode, ExtendsNode, IncludeNode
 
 
 def _is_variable_extends(extend_node):
@@ -52,7 +52,7 @@ def _extend_blocks(extend_node, blocks, context):
             # set this node as the super node (for {{ block.super }})
             block = blocks[parent_block.name]
             seen_supers = []
-            while hasattr(block.parent, 'nodelist') and block.parent not in seen_supers:
+            while hasattr(block.parent, "nodelist") and block.parent not in seen_supers:
                 seen_supers.append(block.parent)
                 block = block.parent
             block.parent = parent_block
@@ -97,14 +97,18 @@ def _extend_nodelist(extends_node, context, instance_types):
     # Dive into all blocks of the page one by one
     all_block_names = list(blocks.keys())
     for block in list(blocks.values()):
-        results += _scan_nodes(block.nodelist, context, instance_types, block, ignore_blocks=all_block_names)
+        results += _scan_nodes(
+            block.nodelist, context, instance_types, block, ignore_blocks=all_block_names
+        )
 
     # Scan topmost template for nodes that exist outside of blocks
     parent_template = _find_topmost_template(extends_node, context)
     if not parent_template:
         return []
     else:
-        results += _scan_nodes(parent_template.nodelist, context, instance_types, ignore_blocks=all_block_names)
+        results += _scan_nodes(
+            parent_template.nodelist, context, instance_types, ignore_blocks=all_block_names
+        )
         return results
 
 
@@ -129,7 +133,7 @@ def _scan_nodes(nodelist, context, instance_types, current_block=None, ignore_bl
                 # This is required for Django 1.7 but works on older version too
                 # Check if it quacks like a template object, if not
                 # presume is a template path and get the object out of it
-                if not callable(getattr(node.template, 'render', None)):
+                if not callable(getattr(node.template, "render", None)):
                     template = get_template(node.template.var)
                 else:
                     template = node.template
@@ -144,21 +148,22 @@ def _scan_nodes(nodelist, context, instance_types, current_block=None, ignore_bl
             results += _extend_nodelist(node, context, instance_types)
         # in block nodes we have to scan for super blocks
         elif isinstance(node, VariableNode) and current_block:
-            if node.filter_expression.token == 'block.super':
+            if node.filter_expression.token == "block.super":
                 # Found a {{ block.super }} line
-                if not hasattr(current_block.parent, 'nodelist'):
+                if not hasattr(current_block.parent, "nodelist"):
                     raise TemplateSyntaxError(
                         "Cannot read {{{{ block.super }}}} for {{% block {0} %}}, "
-                        "the parent template doesn't have this block.".format(
-                        current_block.name
-                    ))
-                results += _scan_nodes(current_block.parent.nodelist, context, instance_types, current_block.parent)
+                        "the parent template doesn't have this block.".format(current_block.name)
+                    )
+                results += _scan_nodes(
+                    current_block.parent.nodelist, context, instance_types, current_block.parent
+                )
         # ignore nested blocks which are already handled
         elif isinstance(node, BlockNode) and ignore_blocks and node.name in ignore_blocks:
             continue
         # if the node has the newly introduced 'child_nodelists' attribute, scan
         # those attributes for nodelists and recurse them
-        elif hasattr(node, 'child_nodelists'):
+        elif hasattr(node, "child_nodelists"):
             for nodelist_name in node.child_nodelists:
                 if hasattr(node, nodelist_name):
                     subnodelist = getattr(node, nodelist_name)
@@ -183,11 +188,11 @@ def _get_main_context(nodelist):
 
     if isinstance(nodelist, TemplateAdapter):
         # The top-level context.
-        context.template = Template('', engine=nodelist.template.engine)
+        context.template = Template("", engine=nodelist.template.engine)
     else:
         # Just in case a different nodelist is provided.
         # Using the default template now.
-        context.template = Template('')
+        context.template = Template("")
     return context
 
 
@@ -195,7 +200,7 @@ def _get_extend_context(parent_context):
     # For extends nodes, a fresh template instance is constructed.
     # The loader cache of the original `nodelist` is skipped.
     context = Context({})
-    context.template = Template('', engine=parent_context.template.engine)
+    context.template = Template("", engine=parent_context.template.engine)
     return context
 
 
