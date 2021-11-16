@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 2.0 (2021-11-16)
+------------------------
+
+* Dropped Python 2.7 support.
+* Dropped Django 1.3-1.7 support.
+* Confirmed Django 4.0 support.
+* Reformatted the code with black and isort
+* Migated to GitHub actions
+
 Version 1.6.2 (2020-01-04)
 --------------------------
 
