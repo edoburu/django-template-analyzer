@@ -1,8 +1,8 @@
 django-template-analyzer
 ========================
 
-.. image:: https://travis-ci.org/edoburu/django-template-analyzer.svg?branch=master
-    :target: http://travis-ci.org/edoburu/django-template-analyzer
+.. image:: https://github.com/edoburu/django-template-analyzer/actions/workflows/tests.yaml/badge.svg?branch=master
+    :target: https://github.com/edoburu/django-template-analyzer/actions/workflows/tests.yaml
 .. image:: https://img.shields.io/pypi/v/django-template-analyzer.svg
     :target: https://pypi.python.org/pypi/django-template-analyzer/
 .. image:: https://img.shields.io/badge/wheel-yes-green.svg

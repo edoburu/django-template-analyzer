@@ -5,31 +5,6 @@ from django.conf import settings
 from django.core.management import execute_from_command_line
 
 if not settings.configured:
-    if django.VERSION >= (1, 8):
-        template_settings = dict(
-            TEMPLATES = [
-                {
-                    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-                    'DIRS': (),
-                    'OPTIONS': {
-                        'loaders': (
-                            'django.template.loaders.filesystem.Loader',
-                            'django.template.loaders.app_directories.Loader',
-                            #added dynamically: 'template_analyzer.tests.app_loader.Loader',
-                        ),
-                    },
-                },
-            ]
-        )
-    else:
-        template_settings = dict(
-            TEMPLATE_DEBUG = True,
-            TEMPLATE_LOADERS = (
-                'django.template.loaders.app_directories.Loader',
-                'template_analyzer.tests.app_loader.Loader',
-            )
-        )
-
     settings.configure(
         DEBUG = True,
         DATABASES = {
@@ -41,8 +16,20 @@ if not settings.configured:
         INSTALLED_APPS = (
             'template_analyzer',
         ),
-        MIDDLEWARE_CLASSES = (),
-        **template_settings
+        MIDDLEWARE = (),
+        TEMPLATES = [
+            {
+                'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                'DIRS': (),
+                'OPTIONS': {
+                    'loaders': (
+                        'django.template.loaders.filesystem.Loader',
+                        'django.template.loaders.app_directories.Loader',
+                        #added dynamically: 'template_analyzer.tests.app_loader.Loader',
+                    ),
+                },
+            },
+        ]
     )
 
 def runtests():
