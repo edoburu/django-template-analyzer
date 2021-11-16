@@ -20,27 +20,27 @@ def get_placeholders_in_template(template):
 class PlaceholderTestCase(TestCase):
     def test_placeholder_scanning_extend(self):
         placeholders = get_placeholders("placeholder_tests/test_one.html")
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"two", u"three"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "two", "three"]))
 
     def test_placeholder_scanning_include(self):
         placeholders = get_placeholders("placeholder_tests/test_two.html")
-        self.assertEqual(sorted(placeholders), sorted([u"child", u"three"]))
+        self.assertEqual(sorted(placeholders), sorted(["child", "three"]))
 
     def test_placeholder_scanning_double_extend(self):
         placeholders = get_placeholders("placeholder_tests/test_three.html")
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"two", u"new_three"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "two", "new_three"]))
 
     def test_placeholder_scanning_complex(self):
         placeholders = get_placeholders("placeholder_tests/test_four.html")
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"child", u"four"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "child", "four"]))
 
     def test_placeholder_scanning_super(self):
         placeholders = get_placeholders("placeholder_tests/test_five.html")
-        self.assertEqual(sorted(placeholders), sorted([u"one", u"extra_one", u"two", u"three"]))
+        self.assertEqual(sorted(placeholders), sorted(["one", "extra_one", "two", "three"]))
 
     def test_placeholder_scanning_nested(self):
         placeholders = get_placeholders("placeholder_tests/test_six.html")
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"new_two", u"new_three"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "new_two", "new_three"]))
 
     #    def test_placeholder_scanning_duplicate(self):
     #        placeholders = self.assertWarns(DuplicatePlaceholderWarning, "Duplicate placeholder found: `one`", get_placeholders, 'placeholder_tests/test_seven.html')
@@ -48,16 +48,16 @@ class PlaceholderTestCase(TestCase):
 
     def test_placeholder_scanning_extend_outside_block(self):
         placeholders = get_placeholders("placeholder_tests/outside.html")
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"two", u"base_outside"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "two", "base_outside"]))
 
     def test_placeholder_scanning_extend_outside_block_nested(self):
         placeholders = get_placeholders("placeholder_tests/outside_nested.html")
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"two", u"base_outside"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "two", "base_outside"]))
 
     def test_placeholder_scanning_nested_super(self):
         placeholders = get_placeholders("placeholder_tests/nested_super_level1.html")
         self.assertEqual(
-            sorted(placeholders), sorted([u"level1", u"level2", u"level3", u"level4"])
+            sorted(placeholders), sorted(["level1", "level2", "level3", "level4"])
         )
 
     def test_ignore_variable_extends(self):
@@ -66,7 +66,7 @@ class PlaceholderTestCase(TestCase):
 
     def test_variable_extends_default(self):
         placeholders = get_placeholders("placeholder_tests/variable_extends_default.html")
-        self.assertEqual(sorted(placeholders), sorted([u"one", u"two", u"three"]))
+        self.assertEqual(sorted(placeholders), sorted(["one", "two", "three"]))
 
     def test_tag_placeholder_exception(self):
         exp = TemplateSyntaxError("placeholder tag requires 2 arguments")
@@ -105,7 +105,7 @@ class PlaceholderTestCase(TestCase):
         template = engine.get_template("placeholder_tests/extends_custom_loader_level1.html")
 
         placeholders = get_placeholders_in_template(template)
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"two", u"three"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "two", "three"]))
 
     def test_custom_loader_level2(self):
         """
@@ -117,7 +117,7 @@ class PlaceholderTestCase(TestCase):
         template = engine.get_template("placeholder_tests/extends_custom_loader_level2.html")
 
         placeholders = get_placeholders_in_template(template)
-        self.assertEqual(sorted(placeholders), sorted([u"new_one", u"two", u"three"]))
+        self.assertEqual(sorted(placeholders), sorted(["new_one", "two", "three"]))
 
     def test_cached_template(self):
         context = {}
@@ -126,7 +126,7 @@ class PlaceholderTestCase(TestCase):
 
         # the analyzer should not affect block nodes.
         placeholders = get_placeholders_in_template(template)
-        self.assertEqual(sorted(placeholders), sorted([u"cache"]))
+        self.assertEqual(sorted(placeholders), sorted(["cache"]))
 
         # see if the block structure is altered
         result2 = template.render(context)

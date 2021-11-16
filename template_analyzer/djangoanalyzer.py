@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Ensure that loader is imported before loader_tags, or a circular import may happen
 # when this file is loaded from an `__init__.py` in an application root.
 # The __init__.py files in applications are loaded very early due to the scan of of translation.activate()

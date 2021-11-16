@@ -14,7 +14,7 @@ class Placeholder(Node):
         if len(tokens) == 2:
             return cls(Variable(tokens[1]))
         else:
-            raise TemplateSyntaxError("{0} tag requires 2 arguments".format(tokens[0]))
+            raise TemplateSyntaxError("{} tag requires 2 arguments".format(tokens[0]))
 
     def __init__(self, name_var):
         self.name_var = name_var
@@ -23,7 +23,7 @@ class Placeholder(Node):
         return self.name_var.literal
 
     def render(self, context):
-        return "[placeholder: {0}]".format(self.name_var.literal)
+        return "[placeholder: {}]".format(self.name_var.literal)
 
 
 @register.tag
