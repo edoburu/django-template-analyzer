@@ -1,4 +1,3 @@
-import django
 from django.template import Context
 from django.template.base import TemplateSyntaxError
 from django.template.loader import get_template
@@ -92,13 +91,10 @@ class PlaceholderTestCase(TestCase):
         """
         When the application uses a custom loader, make sure the template analyzer uses that to find extends nodes.
         """
-        if django.VERSION >= (1, 8):
-            # See whether the engine is correctly passed;
-            # otherwise the custom extends loader could fail.
-            engine = self._get_custom_engine()
-            template = engine.get_template('placeholder_tests/extends_custom_loader_level1.html')
-        else:
-            template = get_template('placeholder_tests/extends_custom_loader_level1.html')
+        # See whether the engine is correctly passed;
+        # otherwise the custom extends loader could fail.
+        engine = self._get_custom_engine()
+        template = engine.get_template('placeholder_tests/extends_custom_loader_level1.html')
 
         placeholders = get_placeholders_in_template(template)
         self.assertEqual(sorted(placeholders), sorted([u'new_one', u'two', u'three']))
@@ -107,13 +103,10 @@ class PlaceholderTestCase(TestCase):
         """
         When the application uses a custom loader, make sure the template analyzer uses that to find extends nodes.
         """
-        if django.VERSION >= (1, 8):
-            # See whether the engine is correctly passed;
-            # otherwise the custom extends loader could fail.
-            engine = self._get_custom_engine()
-            template = engine.get_template('placeholder_tests/extends_custom_loader_level2.html')
-        else:
-            template = get_template('placeholder_tests/extends_custom_loader_level2.html')
+        # See whether the engine is correctly passed;
+        # otherwise the custom extends loader could fail.
+        engine = self._get_custom_engine()
+        template = engine.get_template('placeholder_tests/extends_custom_loader_level2.html')
 
         placeholders = get_placeholders_in_template(template)
         self.assertEqual(sorted(placeholders), sorted([u'new_one', u'two', u'three']))

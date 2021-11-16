@@ -14,15 +14,12 @@ Template usage example::
     {% extends "admin:admin/base.html" %}
 """
 import django
+from importlib import import_module
 from os.path import dirname, join, abspath
 
-from django.conf import settings
+from django.apps import apps
+from django.template import Origin
 from django.template.loaders.filesystem import Loader as FilesystemLoader
-
-try:
-    from importlib import import_module
-except ImportError:
-    from django.utils.importlib import import_module  # Python 2.6
 
 _cache = {}
 
@@ -38,20 +35,10 @@ def get_app_template_dir(app_name):
         return _cache[app_name]
     template_dir = None
 
-    if django.VERSION >= (1, 7):
-        from django.apps import apps
-        for app in apps.get_app_configs():
-            if app.label == app_name:
-                template_dir = join(app.path, 'templates')
-                break
-    else:
-        for app in settings.INSTALLED_APPS:
-            if app.split('.')[-1] == app_name:
-                # Do not hide import errors; these should never happen at this point
-                # anyway
-                mod = import_module(app)
-                template_dir = join(abspath(dirname(mod.__file__)), 'templates')
-                break
+    for app in apps.get_app_configs():
+        if app.label == app_name:
+            template_dir = join(app.path, 'templates')
+            break
 
     _cache[app_name] = template_dir
     return template_dir
@@ -73,14 +60,10 @@ class Loader(FilesystemLoader):
         app_name, template_name = template_name.split(":", 1)
         template_dir = get_app_template_dir(app_name)
         if template_dir:
-            if django.VERSION >= (1, 9):
-                from django.template import Origin
-                origin = Origin(
-                    name=join(template_dir, template_name),
-                    template_name=template_name,
-                    loader=self,
-                )
-            else:
-                origin = join(template_dir, template_name)
+            origin = Origin(
+                name=join(template_dir, template_name),
+                template_name=template_name,
+                loader=self,
+            )
             return [origin]
         return []

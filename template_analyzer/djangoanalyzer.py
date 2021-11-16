@@ -7,27 +7,11 @@ import django
 import django.template.loader  # noqa
 
 # Normal imports
-import sys
 from django.template import NodeList, TemplateSyntaxError, Context, Template
 from django.template.base import VariableNode
+from django.template.backends.django import Template as TemplateAdapter
 from django.template.loader import get_template
-from django.template.loader_tags import ExtendsNode, BlockNode
-
-if sys.version_info[0] >= 3:
-    string_types = str,
-else:
-    string_types = basestring,
-
-try:
-    # Django 1.8+
-    from django.template.backends.django import Template as TemplateAdapter
-except ImportError:
-    TemplateAdapter = None
-
-try:
-    from django.template.loader_tags import ConstantIncludeNode as IncludeNode  # Django <= 1.6
-except ImportError:
-    from django.template.loader_tags import IncludeNode
+from django.template.loader_tags import ExtendsNode, BlockNode, IncludeNode
 
 
 def _is_variable_extends(extend_node):
@@ -36,11 +20,8 @@ def _is_variable_extends(extend_node):
 
     :type extend_node: ExtendsNode
     """
-    if django.VERSION < (1, 4):
-        return extend_node.parent_name_expr  # Django 1.3
-    else:
-        # The FilterExpression.var can be either a string, or Variable object.
-        return not isinstance(extend_node.parent_name.var, string_types)  # Django 1.4
+    # The FilterExpression.var can be either a string, or Variable object.
+    return not isinstance(extend_node.parent_name.var, str)
 
 
 def _extend_blocks(extend_node, blocks, context):
@@ -153,8 +134,8 @@ def _scan_nodes(nodelist, context, instance_types, current_block=None, ignore_bl
                 else:
                     template = node.template
 
-                if TemplateAdapter is not None and isinstance(template, TemplateAdapter):
-                    # Django 1.8: received a new object, take original template
+                if isinstance(template, TemplateAdapter):
+                    # Django 1.8+: received a new object, take original template
                     template = template.template
 
                 results += _scan_nodes(template.nodelist, context, instance_types, current_block)
@@ -197,33 +178,25 @@ def _scan_nodes(nodelist, context, instance_types, current_block=None, ignore_bl
 
 
 def _get_main_context(nodelist):
-    if TemplateAdapter is not None:
-        # Django 1.8+
-        # The context is empty, but needs to be provided to handle the {% extends %} node.
-        context = Context({})
+    # The context is empty, but needs to be provided to handle the {% extends %} node.
+    context = Context({})
 
-        if isinstance(nodelist, TemplateAdapter):
-            # The top-level context.
-            context.template = Template('', engine=nodelist.template.engine)
-        else:
-            # Just in case a different nodelist is provided.
-            # Using the default template now.
-            context.template = Template('')
-        return context
+    if isinstance(nodelist, TemplateAdapter):
+        # The top-level context.
+        context.template = Template('', engine=nodelist.template.engine)
     else:
-        return {}
+        # Just in case a different nodelist is provided.
+        # Using the default template now.
+        context.template = Template('')
+    return context
 
 
 def _get_extend_context(parent_context):
-    if TemplateAdapter is not None:
-        # Django 1.8+
-        # For extends nodes, a fresh template instance is constructed.
-        # The loader cache of the original `nodelist` is skipped.
-        context = Context({})
-        context.template = Template('', engine=parent_context.template.engine)
-        return context
-    else:
-        return {}
+    # For extends nodes, a fresh template instance is constructed.
+    # The loader cache of the original `nodelist` is skipped.
+    context = Context({})
+    context.template = Template('', engine=parent_context.template.engine)
+    return context
 
 
 def get_node_instances(nodelist, instances):
@@ -241,8 +214,9 @@ def get_node_instances(nodelist, instances):
     """
     context = _get_main_context(nodelist)
 
-    # The Django 1.8 loader returns an adapter class; it wraps the original Template in a new object to be API compatible
-    if TemplateAdapter is not None and isinstance(nodelist, TemplateAdapter):
+    # The Django loader returns an adapter class;
+    # it wraps the original Template in a new object to be API compatible
+    if isinstance(nodelist, TemplateAdapter):
         nodelist = nodelist.template
 
     return _scan_nodes(nodelist, context, instances)
