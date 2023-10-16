@@ -26,7 +26,10 @@ jobs:
           - django: "3.2"
             python: "3.6"
           # Django 4.0
-          - django: "4.0b1"
+          - django: "4.2"
+            python: "3.10"
+          # Django 5.0
+          - django: "5.0a1"
             python: "3.10"
 
     steps:
@@ -48,4 +51,4 @@ jobs:
           echo "Python ${{ matrix.python }} / Django ${{ matrix.django }}"
           coverage run --rcfile=.coveragerc runtests.py
           codecov
-        continue-on-error: ${{ contains(matrix.django, '4.0') }}
+        continue-on-error: ${{ contains(matrix.django, '5.0') }}
