@@ -222,4 +222,9 @@ def get_node_instances(nodelist, instances):
     if isinstance(nodelist, TemplateAdapter):
         nodelist = nodelist.template
 
+    if isinstance(nodelist, Template):
+        # As of Django 4.1, template Node objects no longer allow iteration,
+        # which breaks Template.__iter__ too. Instead, directly walk over the nodelist.
+        nodelist = nodelist.nodelist
+
     return _scan_nodes(nodelist, context, instances)
